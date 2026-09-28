@@ -1,35 +1,35 @@
 import { positionAt } from "../../shared/protocol";
 import type { RoomClient } from "./room";
-import { clear, fmtTime, h, icon } from "./ui";
+import { clear, disc, fmtTime, h, icon } from "./ui";
 
 /** Play/pause/seek/skip + a seekable progress bar driven purely by the room clock. */
 export function Transport(room: RoomClient, opts: { big?: boolean } = {}) {
-  const playBtn = h("button", { class: "ctrl ctrl-main", type: "button", title: "Play / pause (Space)" });
+  const playIcon = h("span", { class: "disc-icon" });
+  const playDisc = disc("disc-play", playIcon);
+  const playBtn = h("button", { class: "disc-btn", type: "button", title: "Play / pause (Space)", "aria-label": "Play or pause" }, playDisc);
   const skipBtn = h("button", { class: "ctrl", type: "button", title: "Skip (N)" }, icon("skip", 18));
   const restartBtn = h("button", { class: "ctrl", type: "button", title: "Restart song" }, icon("restart", 18));
-  const back = h("button", { class: "ctrl ctrl-text", type: "button", title: "Back 10s (←)" }, "−10s");
-  const fwd = h("button", { class: "ctrl ctrl-text", type: "button", title: "Forward 10s (→)" }, "+10s");
+  const back = h("button", { class: "ctrl ctrl-seek", type: "button", title: "Back 10 seconds (←)", "aria-label": "Back 10 seconds" }, "−10");
+  const fwd = h("button", { class: "ctrl ctrl-seek", type: "button", title: "Forward 10 seconds (→)", "aria-label": "Forward 10 seconds" }, "+10");
 
   const fill = h("div", { class: "progress-fill" });
   const knob = h("div", { class: "progress-knob" });
   const bar = h("div", { class: "progress", role: "slider", "aria-label": "Seek", tabindex: 0 }, h("div", { class: "progress-track" }, fill, knob));
-  const cur = h("span", { class: "time" }, "0:00");
-  const dur = h("span", { class: "time" }, "0:00");
+  const cur = h("span", { class: "time led" }, "0:00");
+  const dur = h("span", { class: "time led" }, "0:00");
 
-  const el = h(
-    "div",
-    { class: "transport" + (opts.big ? " big" : "") },
-    h("div", { class: "progress-row" }, cur, bar, dur),
-    h("div", { class: "ctrl-row" }, restartBtn, back, playBtn, fwd, skipBtn),
-  );
+  const progressRow = h("div", { class: "progress-row" }, cur, bar, dur);
+  const ctrlRow = h("div", { class: "ctrl-row" }, restartBtn, back, playBtn, fwd, skipBtn);
+  const el = h("div", { class: "transport" + (opts.big ? " big" : "") }, progressRow, ctrlRow);
 
   let status = "";
   const paintPlay = () => {
     const s = room.state?.playback.status ?? "idle";
     if (s === status) return;
     status = s;
-    clear(playBtn);
-    playBtn.appendChild(icon(s === "playing" ? "pause" : "play", 22));
+    clear(playIcon);
+    playIcon.appendChild(icon(s === "playing" ? "pause" : "play", 20));
+    playDisc.classList.toggle("spinning", s === "playing");
   };
 
   const position = () => (room.state ? positionAt(room.state.playback, room.now()) : 0);
@@ -65,10 +65,10 @@ export function Transport(room: RoomClient, opts: { big?: boolean } = {}) {
     knob.style.left = `${f * 100}%`;
     cur.textContent = fmtTime(s?.current ? p : 0);
     dur.textContent = fmtTime(d);
-    el.classList.toggle("disabled", !s?.current && !s?.queue.length);
+    ctrlRow.classList.toggle("disabled", !s?.current && !s?.queue.length);
   };
   window.setInterval(frame, 250);
   room.onState(frame);
 
-  return { el, toggle, seekBy, skip };
+  return { el, progressRow, ctrlRow, toggle, seekBy, skip };
 }

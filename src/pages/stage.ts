@@ -2,7 +2,7 @@ import type { RoomState } from "../../shared/protocol";
 import { positionAt } from "../../shared/protocol";
 import { SyncedPlayer } from "../lib/player";
 import { RoomClient, createRoom, roomExists } from "../lib/room";
-import { brand, clear, cleanTitle, fmtTime, h, icon, joinUrl, qrSvg, toast } from "../lib/ui";
+import { brand, clear, cleanTitle, disc, fmtTime, h, icon, joinUrl, led, qrSvg, toast } from "../lib/ui";
 import { fullscreen } from "./host";
 
 /** /tv with no code: make a room so a TV never needs on-screen typing. */
@@ -13,7 +13,7 @@ export async function StageBoot(root: HTMLElement) {
     location.replace(`/tv/${code}`);
   } catch {
     clear(root);
-    root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, "Couldn't reach Awitloop. Check the TV's internet connection."), h("button", { class: "btn btn-accent btn-lg", onclick: () => location.reload(), autofocus: true }, "Try again")));
+    root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, "Couldn't reach Awitloop. Check the TV's internet connection."), h("button", { class: "btn btn-primary btn-lg", onclick: () => location.reload(), autofocus: true }, "Try again")));
   }
 }
 
@@ -23,7 +23,7 @@ export async function Stage(root: HTMLElement, code: string) {
   document.documentElement.classList.add("tv");
 
   if (!(await roomExists(code))) {
-    root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, `Room ${code} has ended or doesn't exist.`), h("a", { class: "btn btn-accent btn-lg", href: "/tv" }, "Start a new room")));
+    root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, `Room ${code} has ended or doesn't exist.`), h("a", { class: "btn btn-primary btn-lg", href: "/tv" }, "Start a new room")));
     return;
   }
 
@@ -32,33 +32,40 @@ export async function Stage(root: HTMLElement, code: string) {
   const url = joinUrl(code);
 
   const videoHost = h("div", { class: "video" });
-  const startBtn = h("button", { class: "btn btn-accent btn-xl", type: "button", autofocus: true }, icon("play", 22), h("span", null, "Start the party"));
+  const startBtn = h("button", { class: "tv-start", type: "button", autofocus: true, "aria-label": "Start" }, disc("disc-start", h("span", { class: "tv-ok" }, "OK")));
   const welcome = h(
     "div",
     { class: "tv-welcome" },
-    brand("lg"),
-    h("h1", null, "Press ", h("span", { class: "key" }, "OK"), " to start"),
-    h("p", { class: "muted" }, "TVs need one button press before they're allowed to play sound."),
     startBtn,
+    h("div", { class: "tv-welcome-copy" }, brand("lg"), h("h1", null, "Press OK on your remote to start."), h("p", null, "The TV needs one button press before it's allowed to play sound.")),
   );
 
   const idleQueue = h("div", { class: "tv-idle-queue" });
   const idle = h(
     "div",
     { class: "tv-idle" },
-    h("div", { class: "tv-idle-left" }, brand("lg"), h("h1", { class: "tv-idle-title" }, "Scan to join", h("br"), "and pick a song."), h("div", { class: "tv-code" }, h("span", { class: "muted" }, "Room"), h("b", { class: "mono" }, code)), h("div", { class: "muted mono small" }, url.replace(/^https?:\/\//, "")), idleQueue),
-    h("div", { class: "tv-idle-qr", html: qrSvg(url, 8) }),
+    disc("disc-tv", h("span", { class: "qr", html: qrSvg(url, 8) })),
+    h(
+      "div",
+      { class: "tv-idle-copy" },
+      brand("lg"),
+      h("h1", { class: "tv-idle-title" }, "Scan the disc with your phone and pick a song."),
+      h("p", { class: "tv-code" }, h("span", null, "Room"), led(code, "led-xl")),
+      h("p", { class: "tv-url" }, url.replace(/^https?:\/\//, "")),
+      idleQueue,
+    ),
   );
 
   const lowerSinger = h("div", { class: "lt-singer" });
   const lowerTitle = h("div", { class: "lt-title" });
-  const lowerTime = h("div", { class: "lt-time mono" });
-  const lowerThird = h("div", { class: "lower-third" }, h("span", { class: "lt-mark" }, icon("mic", 20)), h("div", null, lowerSinger, lowerTitle), lowerTime);
+  const lowerTime = led("", "lt-time");
+  const ltDisc = disc("disc-lt", icon("mic", 18));
+  const lowerThird = h("div", { class: "lower-third" }, ltDisc, h("div", { class: "lt-text" }, lowerSinger, lowerTitle), lowerTime);
 
   const nextList = h("div", { class: "next-list" });
-  const upNext = h("div", { class: "up-next" }, h("div", { class: "kicker" }, "Up next"), nextList);
-  const cornerQr = h("div", { class: "corner-qr" }, h("div", { class: "cq-code", html: qrSvg(url, 3) }), h("div", null, h("div", { class: "kicker" }, "Add songs"), h("b", { class: "mono" }, code)));
-  const soundGate = h("button", { class: "gate", type: "button", hidden: true }, h("span", { class: "gate-ic" }, icon("volume", 36)), h("span", null, "Press OK for sound"));
+  const upNext = h("div", { class: "up-next" }, h("p", { class: "panel-title" }, "Up next"), nextList);
+  const cornerQr = h("div", { class: "corner-qr" }, h("div", { class: "cq-code", html: qrSvg(url, 3) }), h("div", null, h("p", null, "Add a song"), led(code)));
+  const soundGate = h("button", { class: "gate", type: "button", hidden: true }, h("span", { class: "gate-ic" }, icon("volume", 36)), h("span", null, "Press OK to turn on sound"));
   const connBanner = h("div", { class: "tv-conn", hidden: true }, "Reconnecting…");
 
   const stage = h("div", { class: "tv-stage is-idle" }, videoHost, idle, lowerThird, upNext, cornerQr, soundGate, connBanner, welcome);
@@ -102,12 +109,13 @@ export async function Stage(root: HTMLElement, code: string) {
   const renderQueue = (host: HTMLElement, s: RoomState, n: number) => {
     clear(host);
     s.queue.slice(0, n).forEach((q, i) =>
-      host.appendChild(h("div", { class: "nx" }, h("span", { class: "nx-n mono" }, String(i + 1)), h("div", null, h("div", { class: "nx-title" }, cleanTitle(q.title)), h("div", { class: "nx-singer" }, q.singer)))),
+      host.appendChild(h("div", { class: "nx" }, led(String(i + 1), "nx-n"), h("div", null, h("div", { class: "nx-title" }, cleanTitle(q.title)), h("div", { class: "nx-singer" }, q.singer)))),
     );
     if (s.queue.length > n) host.appendChild(h("div", { class: "nx-more muted" }, `+${s.queue.length - n} more`));
   };
 
   room.onState((s) => {
+    ltDisc.classList.toggle("spinning", s.playback.status === "playing");
     stage.classList.toggle("is-idle", !s.current);
     stage.classList.toggle("is-paused", s.playback.status === "paused");
     if (s.current) {
@@ -117,7 +125,7 @@ export async function Stage(root: HTMLElement, code: string) {
     renderQueue(nextList, s, 4);
     clear(idleQueue);
     if (s.queue.length) {
-      idleQueue.appendChild(h("div", { class: "kicker" }, "Up next"));
+      idleQueue.appendChild(h("p", { class: "panel-title" }, "Up next"));
       const l = h("div", { class: "next-list" });
       renderQueue(l, s, 3);
       idleQueue.appendChild(l);

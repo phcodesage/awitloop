@@ -1,6 +1,6 @@
 import type { QueueItem, RoomState, Song } from "../../shared/protocol";
 import type { RoomClient } from "./room";
-import { clear, cleanTitle, fmtTime, getName, getStars, h, icon, isStarred, toast, toggleStar } from "./ui";
+import { clear, cleanTitle, fmtTime, getName, getStars, h, icon, isStarred, led, toast, toggleStar } from "./ui";
 
 type Tab = "search" | "queue" | "hits" | "stars";
 
@@ -37,7 +37,7 @@ export function Songbook(room: RoomClient, opts: SongbookOptions) {
   let searchSeq = 0;
 
   const tabBtns: Record<Tab, HTMLButtonElement> = {} as any;
-  const queueCount = h("span", { class: "count" }, "0");
+  const queueCount = led("0", "count");
   const tabs = h(
     "div",
     { class: "tabs", role: "tablist" },
@@ -87,7 +87,7 @@ export function Songbook(room: RoomClient, opts: SongbookOptions) {
     h("span", { class: "search-ic" }, icon("search", 18)),
     input,
     micBtn,
-    h("button", { class: "btn btn-accent", type: "submit" }, "Search"),
+    h("button", { class: "btn btn-primary", type: "submit" }, "Search"),
   );
   const filter = h("label", { class: "filter" }, karaokeOnly, h("span", null, "Karaoke versions only"));
 
@@ -227,7 +227,7 @@ export function Songbook(room: RoomClient, opts: SongbookOptions) {
         { class: "actions" },
         starBtn,
         h("button", { class: "icon-btn sm", type: "button", title: "Sing next", onclick: () => queue(song, true) }, icon("next", 16)),
-        h("button", { class: "btn btn-accent btn-sm", type: "button", onclick: () => queue(song) }, icon("plus", 14), h("span", null, "Queue")),
+        h("button", { class: "btn btn-primary btn-sm", type: "button", onclick: () => queue(song) }, icon("plus", 14), h("span", null, "Queue")),
       ),
     );
   }
@@ -238,7 +238,7 @@ export function Songbook(room: RoomClient, opts: SongbookOptions) {
       { class: "song queued" },
       h("div", { class: "num" }, String(i + 1)),
       h("div", { class: "thumb" }, h("img", { src: item.thumb, alt: "", loading: "lazy" }), item.duration ? h("span", { class: "dur" }, fmtTime(item.duration)) : null),
-      h("div", { class: "meta" }, h("div", { class: "title" }, cleanTitle(item.title)), h("div", { class: "sub" }, h("b", null, item.singer), " · ", item.channel)),
+      h("div", { class: "meta" }, h("div", { class: "title" }, cleanTitle(item.title)), h("div", { class: "sub" }, h("b", null, item.singer), h("span", null, item.channel))),
       h(
         "div",
         { class: "actions" },
@@ -288,7 +288,7 @@ export function Songbook(room: RoomClient, opts: SongbookOptions) {
           ),
         );
       }
-      list.appendChild(h("div", { class: "list-label" }, s.queue.length ? `Up next · ${s.queue.length}` : "Up next"));
+      list.appendChild(h("div", { class: "list-label" }, "Up next", s.queue.length ? led(String(s.queue.length), "led-sm") : null));
       if (!s.queue.length) list.appendChild(empty("Queue is empty", "Add a song and it starts right away."));
       s.queue.forEach((q, i) => list.appendChild(queueRow(q, i, s)));
       if (s.history.length) {

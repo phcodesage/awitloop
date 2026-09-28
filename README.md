@@ -37,7 +37,21 @@ These come straight from user feedback on similar apps:
 - **Cloudflare Workers** serve the static app and the `/api/*` routes.
 - **Durable Objects** (SQLite-backed, WebSocket Hibernation): one object per room is the single source of truth for queue and playback.
 - **Search** goes through YouTube's InnerTube endpoint, so no API key is needed. Results are cached at the edge, and each video is checked for embeddability.
-- **Frontend**: Vite + vanilla TypeScript, about 21 KB gzipped, with `@vitejs/plugin-legacy` for old TV browsers. Design tokens come from [Musico](https://musico.framer.website/): ink black `#0b0b0b` and ember orange `#dc6d28`, with Inter and Fragment Mono.
+- **Frontend**: Vite + vanilla TypeScript, about 21 KB gzipped, with `@vitejs/plugin-legacy` for old TV browsers.
+
+## Design
+
+The look is a future videoke machine. The one loud element is the **laser disc**, with iridescent foil and grooves. It's the play button (it spins while a song plays) and the brand mark, and on idle screens it holds the join QR code on its center label. Everything else stays quiet: flat midnight surfaces, keycap-style hardware buttons, and a dot-matrix LED face ([Doto](https://fonts.google.com/specimen/Doto)) used only for machine readouts such as the room code, the clock, and counts. UI text is set in [Onest](https://fonts.google.com/specimen/Onest).
+
+| Token | Dark | Light |
+| --- | --- | --- |
+| night (background) | `#141331` | `#ECEAF6` |
+| deck (panels) | `#1C1A44` | `#FFFFFF` |
+| moon (text, primary buttons) | `#EEEBFF` | `#16143A` |
+| led (readouts, progress) | `#9DE7FF` | `#1C6591` |
+| hot (live states only) | `#FF5C7A` | `#D2335A` |
+
+The YouTube player is sized taller than its frame, so the video letterboxes inside it and YouTube's title bar and "More videos" strip fall in the cropped area. A transparent shield keeps hover from bringing them back.
 
 ```
 phone ─┐                       ┌─ TV stage (/tv/CODE)

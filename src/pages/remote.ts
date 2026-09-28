@@ -1,14 +1,14 @@
 import { positionAt } from "../../shared/protocol";
 import { RoomClient, roomExists } from "../lib/room";
 import { Songbook } from "../lib/songbook";
-import { brand, clear, cleanTitle, fmtTime, getName, h, icon, setName, themeToggle, toast } from "../lib/ui";
+import { brand, clear, cleanTitle, disc, fmtTime, getName, h, icon, led, setName, themeToggle, toast } from "../lib/ui";
 
 /** Phone remote: the songbook, plus a mini transport for whoever's holding the mic. */
 export async function Remote(root: HTMLElement, code: string) {
   document.title = `Songbook · ${code}`;
 
   if (!(await roomExists(code))) {
-    root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, `Room ${code} has ended or doesn't exist.`), h("a", { class: "btn btn-accent", href: "/" }, "Go home")));
+    root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, `Room ${code} has ended or doesn't exist.`), h("a", { class: "btn btn-primary", href: "/" }, "Go home")));
     return;
   }
 
@@ -18,7 +18,7 @@ export async function Remote(root: HTMLElement, code: string) {
   const room = new RoomClient(code, "remote", name);
   room.onToast((t, err) => toast(t, err ? "error" : "info"));
 
-  const nameBtn = h("button", { class: "pill pill-btn", type: "button", title: "Change your name" }, icon("mic", 13), h("span", null, name));
+  const nameBtn = h("button", { class: "name-btn", type: "button", title: "Change your name" }, icon("mic", 14), h("span", null, name));
   nameBtn.addEventListener("click", async () => {
     const n = await askName(document.body, name);
     name = n;
@@ -29,11 +29,13 @@ export async function Remote(root: HTMLElement, code: string) {
   const songbook = Songbook(room, { singer: () => name, compact: true });
 
   const npThumb = h("img", { class: "mini-thumb", alt: "" }) as HTMLImageElement;
+  const npDisc = disc("disc-mini-player", npThumb);
   const npTitle = h("div", { class: "mini-title" }, "Nothing playing");
   const npSub = h("div", { class: "mini-sub" }, "Queue a song to start");
   const npFill = h("div", { class: "mini-fill" });
-  const playBtn = h("button", { class: "ctrl ctrl-main sm", type: "button", title: "Play / pause" });
-  const skipBtn = h("button", { class: "ctrl sm", type: "button", title: "Skip" }, icon("skip", 16));
+  const npTime = led("", "led-sm mini-time");
+  const playBtn = h("button", { class: "ctrl ctrl-hot", type: "button", title: "Play / pause" });
+  const skipBtn = h("button", { class: "ctrl", type: "button", title: "Skip" }, icon("skip", 16));
   playBtn.addEventListener("click", () => room.send({ t: room.state?.playback.status === "playing" ? "pause" : "play" }));
   skipBtn.addEventListener("click", () => {
     const cur = room.state?.current;
@@ -45,7 +47,7 @@ export async function Remote(root: HTMLElement, code: string) {
     "div",
     { class: "mini-player" },
     h("div", { class: "mini-progress" }, npFill),
-    h("div", { class: "mini-row" }, npThumb, h("div", { class: "mini-text", onclick: () => songbook.setTab("queue") }, npTitle, npSub), playBtn, skipBtn),
+    h("div", { class: "mini-row" }, npDisc, h("div", { class: "mini-text", onclick: () => songbook.setTab("queue") }, npTitle, npSub), npTime, playBtn, skipBtn),
   );
 
   const conn = h("span", { class: "conn" });
@@ -54,7 +56,7 @@ export async function Remote(root: HTMLElement, code: string) {
     h(
       "div",
       { class: "remote" },
-      h("header", { class: "remote-bar" }, brand(), h("div", { class: "bar-right" }, conn, h("span", { class: "pill mono" }, code), nameBtn, themeToggle())),
+      h("header", { class: "remote-bar" }, brand(), h("div", { class: "bar-right" }, conn, h("span", { class: "room-code static" }, led(code)), nameBtn, themeToggle())),
       h("main", { class: "remote-main" }, songbook.el),
       mini,
     ),
@@ -66,11 +68,12 @@ export async function Remote(root: HTMLElement, code: string) {
     if (s.current) {
       npThumb.src = s.current.thumb;
       npTitle.textContent = cleanTitle(s.current.title);
-      npSub.textContent = `${s.current.singer} · ${s.queue.length} up next`;
+      npSub.textContent = s.queue.length ? `${s.current.singer} is singing, ${s.queue.length} up next` : `${s.current.singer} is singing`;
     } else {
       npTitle.textContent = "Nothing playing";
       npSub.textContent = s.queue.length ? `${s.queue.length} in queue` : "Queue a song to start";
     }
+    npDisc.classList.toggle("spinning", s.playback.status === "playing");
     if (s.playback.status !== status) {
       status = s.playback.status;
       clear(playBtn);
@@ -86,7 +89,8 @@ export async function Remote(root: HTMLElement, code: string) {
     const d = s?.current?.duration ?? 0;
     const p = s ? positionAt(s.playback, room.now()) : 0;
     npFill.style.width = d ? `${Math.min(100, (p / d) * 100)}%` : "0%";
-    if (s?.current && d) npSub.textContent = `${s.current.singer} · ${fmtTime(p)} / ${fmtTime(d)}`;
+    if (s?.current && d) npTime.textContent = `${fmtTime(p)} / ${fmtTime(d)}`;
+    else npTime.textContent = "";
   }, 1000);
 }
 
@@ -108,11 +112,11 @@ function askName(host: HTMLElement, current = ""): Promise<string> {
             resolve(n);
           },
         },
-        h("div", { class: "sheet-ic" }, icon("mic", 24)),
+        disc("disc-sheet", icon("mic", 22)),
         h("h2", null, "Who's singing?"),
         h("p", { class: "muted" }, "Your name shows on the TV when your song comes up."),
         input,
-        h("button", { class: "btn btn-accent btn-lg block", type: "submit" }, "Let's go"),
+        h("button", { class: "btn btn-primary btn-lg block", type: "submit" }, "Let's go"),
       ),
     );
     host.appendChild(sheet);

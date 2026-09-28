@@ -69,7 +69,10 @@ export class SyncedPlayer {
     private opts: SyncedPlayerOptions,
   ) {
     const mount = document.createElement("div");
+    const shield = document.createElement("div");
+    shield.className = "video-shield";
     host.appendChild(mount);
+    host.appendChild(shield);
     loadApi().then(() => {
       this.yt = new window.YT.Player(mount, {
         width: "100%",

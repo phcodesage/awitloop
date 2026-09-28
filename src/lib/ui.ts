@@ -99,12 +99,20 @@ export function qrSvg(text: string, cell = 4): string {
 }
 
 export function brand(size: "sm" | "lg" = "sm") {
-  return h(
-    "a",
-    { class: `brand brand-${size}`, href: "/" },
-    h("span", { class: "brand-mark" }, icon("wave", size === "lg" ? 22 : 16)),
-    h("span", { class: "brand-word" }, "awit", h("em", null, "loop")),
-  );
+  return h("a", { class: `brand brand-${size}`, href: "/", "aria-label": "Awitloop home" }, disc("disc-mark"), h("span", { class: "brand-word" }, "awitloop"));
+}
+
+/**
+ * The laser disc: the one loud element in the system. Grooves + iridescent foil,
+ * with an optional center label (a QR code, an icon, a readout).
+ */
+export function disc(cls = "", label?: Node | null) {
+  return h("span", { class: `disc ${cls}` }, h("span", { class: "disc-foil" }), h("span", { class: "disc-grooves" }), h("span", { class: "disc-label" }, label ?? null));
+}
+
+/** Dot-matrix readout, the videoke machine's display. */
+export function led(text: string, cls = "") {
+  return h("span", { class: `led ${cls}` }, text);
 }
 
 /* ---------- toasts ---------- */
