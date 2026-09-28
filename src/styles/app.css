@@ -457,6 +457,23 @@ body.has-mini .toasts {
 .topnav a {
   margin-right: 28px;
 }
+.install-btn {
+  margin-right: 12px;
+}
+.resume {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 22px;
+  padding: 9px 18px;
+  border-radius: 40px;
+  border: 1px solid rgba(220, 109, 40, 0.5);
+  background: rgba(220, 109, 40, 0.1);
+  font-size: 15px;
+  font-weight: 600;
+}
+.resume:hover {
+  border-color: var(--hot);
+}
 .topnav a:hover {
   color: var(--moon);
 }
@@ -2064,9 +2081,31 @@ html.tv body {
 
 /* ---------- small screens ---------- */
 
+/* Decorative glows and the hero disc are wider than a phone; never let them widen the page. */
+.landing {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
 @media (max-width: 860px) {
   .wrap {
-    padding: 0 18px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .section {
+    padding-top: 64px;
+    padding-bottom: 0;
+  }
+  .section-title {
+    font-size: 34px;
+  }
+  .topbar {
+    height: 68px;
+  }
+  .footer {
+    background-size: calc(100% - 36px) 1px;
+    flex-direction: column;
+    align-items: flex-start;
   }
   .topnav a {
     display: none;
@@ -2135,8 +2174,196 @@ html.tv body {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
   }
+  .console {
+    padding: 0 12px 12px;
+  }
+  .console-bar {
+    height: 64px;
+  }
+  .console-bar .brand-word,
   .console-bar .room-code-label {
     display: none;
+  }
+  .console-bar .bar-right > * + * {
+    margin-left: 6px;
+  }
+  .console-bar .btn-ghost {
+    width: 40px;
+    padding: 0;
+  }
+  .songbook-panel {
+    height: 78vh;
+    padding: 14px 14px 0;
+    border-radius: 18px;
+  }
+  .tab .ic {
+    display: none;
+  }
+  .tab {
+    font-size: 13px;
+  }
+  .song > * + * {
+    margin-left: 10px;
+  }
+  .song .actions > * + * {
+    margin-left: 4px;
+  }
+  .song .icon-btn.sm {
+    width: 32px;
+    height: 32px;
+  }
+  .song .title {
+    font-size: 14px;
+  }
+  .search-form .btn {
+    padding: 0 16px;
+  }
+  .deck {
+    padding-top: 14px;
+  }
+  .np {
+    text-align: center;
+  }
+}
+
+/* The TV view opened on a phone (portrait): stack everything and size by width. */
+@media (orientation: portrait) {
+  .tv-welcome,
+  .tv-idle {
+    flex-direction: column;
+    justify-content: center;
+    padding: 6vh 7vw;
+    text-align: center;
+  }
+  .disc-start {
+    width: 62vw;
+    height: 62vw;
+  }
+  .tv-ok {
+    font-size: 11vw;
+  }
+  .tv-welcome-copy,
+  .tv-idle-copy {
+    margin: 5vh 0 0;
+    max-width: 86vw;
+  }
+  .tv-welcome h1 {
+    font-size: 8.4vw;
+  }
+  .tv-welcome p {
+    font-size: 4vw;
+  }
+  .disc-tv {
+    width: 72vw;
+    height: 72vw;
+  }
+  .tv-idle-copy .brand {
+    display: none;
+  }
+  .tv-idle-title {
+    margin-top: 0;
+    font-size: 7vw;
+  }
+  .tv-code {
+    justify-content: center;
+    font-size: 3.8vw;
+    margin-top: 3vh;
+  }
+  .tv-code .led {
+    font-size: 10vw;
+  }
+  .tv-url {
+    font-size: 3.6vw;
+  }
+  .tv-idle-queue {
+    margin-top: 3vh;
+    text-align: left;
+  }
+  .tv-idle-queue .panel-title,
+  .panel-title {
+    font-size: 3.4vw;
+  }
+  .tv-idle .nx-title,
+  .nx-title {
+    font-size: 3.8vw;
+  }
+  .tv-idle .nx-singer,
+  .nx-singer {
+    font-size: 3.2vw;
+  }
+  .tv-idle .nx-n,
+  .nx-n {
+    width: 6vw;
+    font-size: 3.8vw;
+  }
+  .nx-more {
+    font-size: 3.2vw;
+  }
+  .lower-third {
+    left: 4vw;
+    right: 4vw;
+    bottom: 3vh;
+    padding: 2vw 4vw 2vw 2vw;
+  }
+  .disc-lt {
+    width: 11vw;
+    height: 11vw;
+  }
+  .lt-text {
+    flex: 1;
+    min-width: 0;
+    margin-left: 3vw;
+  }
+  .lt-singer {
+    font-size: 4.6vw;
+  }
+  .lt-title {
+    font-size: 3.4vw;
+    max-width: none;
+  }
+  .lt-time {
+    font-size: 3.2vw;
+  }
+  .up-next {
+    top: 3vh;
+    left: 4vw;
+    right: 4vw;
+    width: auto;
+    padding: 4vw;
+    border-radius: 4vw;
+  }
+  .corner-qr {
+    top: 3vh;
+    bottom: auto;
+    right: 4vw;
+    padding: 1.6vw 3vw 1.6vw 1.6vw;
+    border-radius: 3vw;
+  }
+  .tv-stage.show-next .corner-qr {
+    display: none;
+  }
+  .cq-code {
+    width: 16vw;
+    height: 16vw;
+    margin-right: 2.4vw;
+    border-radius: 1.6vw;
+  }
+  .corner-qr p {
+    font-size: 3vw;
+  }
+  .corner-qr .led {
+    font-size: 4.6vw;
+  }
+  .tv-stage .gate {
+    font-size: 4.6vw;
+  }
+  .tv-stage .gate-ic {
+    width: 20vw;
+    height: 20vw;
+  }
+  .tv-conn,
+  .tv-stage .toast {
+    font-size: 3.6vw;
   }
 }
 @media (prefers-reduced-motion: reduce) {

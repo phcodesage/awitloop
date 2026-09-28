@@ -1,4 +1,5 @@
 import { SyncedPlayer } from "../lib/player";
+import { rememberRoom } from "../lib/pwa";
 import { RoomClient } from "../lib/room";
 import { Songbook } from "../lib/songbook";
 import { Transport } from "../lib/transport";
@@ -7,6 +8,7 @@ import { brand, cleanTitle, disc, getName, h, icon, isTyping, joinUrl, led, qrSv
 /** Laptop/desktop console: the screen and its deck on the left, the songbook on the right. */
 export function Host(root: HTMLElement, code: string) {
   document.title = `Room ${code} · Awitloop`;
+  rememberRoom(code, "host");
   const room = new RoomClient(code, "host", getName() || "Host");
   room.onToast((t, err) => toast(t, err ? "error" : "info"));
 

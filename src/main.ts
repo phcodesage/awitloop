@@ -1,5 +1,6 @@
 import "./styles/app.css";
 import { isRoomCode } from "../shared/protocol";
+import { initPwa } from "./lib/pwa";
 import { initTheme } from "./lib/ui";
 import { Host } from "./pages/host";
 import { Landing } from "./pages/landing";
@@ -7,6 +8,7 @@ import { Remote } from "./pages/remote";
 import { Stage, StageBoot } from "./pages/stage";
 
 initTheme();
+initPwa();
 
 const root = document.getElementById("app")!;
 const parts = location.pathname.split("/").filter(Boolean);

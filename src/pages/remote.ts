@@ -3,16 +3,17 @@ import { positionAt } from "../../shared/protocol";
 import { SyncedPlayer } from "../lib/player";
 import { RoomClient, roomExists } from "../lib/room";
 import { Songbook } from "../lib/songbook";
-import { brand, clear, cleanTitle, disc, fmtTime, getName, h, icon, led, setName, themeToggle, toast } from "../lib/ui";
+import { rememberRoom } from "../lib/pwa";
+import { bootMessage, brand, clear, cleanTitle, disc, fmtTime, getName, h, icon, led, setName, themeToggle, toast } from "../lib/ui";
 
 /** Phone remote: the songbook, plus a mini transport for whoever's holding the mic. */
 export async function Remote(root: HTMLElement, code: string) {
   document.title = `Songbook · ${code}`;
 
-  if (!(await roomExists(code))) {
-    root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, `Room ${code} has ended or doesn't exist.`), h("a", { class: "btn btn-primary", href: "/" }, "Go home")));
-    return;
-  }
+  const exists = await roomExists(code);
+  if (exists === null) return bootMessage(root, "You're offline. Connect to the internet to join the room.", { label: "Try again", onClick: () => location.reload() });
+  if (!exists) return bootMessage(root, `Room ${code} has ended or doesn't exist.`, { label: "Go home", href: "/" });
+  rememberRoom(code, "remote");
 
   let name = getName();
   if (!name) name = await askName(root);
@@ -65,7 +66,7 @@ export async function Remote(root: HTMLElement, code: string) {
     else where.textContent = "No screen is playing sound right now";
     clear(hereBtn);
     hereBtn.appendChild(icon(phonePlayer ? "mute" : "volume", 14));
-    hereBtn.appendChild(h("span", null, phonePlayer ? "Stop playing here" : "Play here"));
+    hereBtn.appendChild(h("span", null, phonePlayer ? "Stop" : "Play here"));
   };
 
   hereBtn.addEventListener("click", () => {

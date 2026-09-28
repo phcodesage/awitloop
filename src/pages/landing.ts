@@ -1,4 +1,5 @@
 import { isRoomCode } from "../../shared/protocol";
+import { installMode, lastRoom, onInstallChange, promptInstall, roomPath } from "../lib/pwa";
 import { createRoom, roomExists } from "../lib/room";
 import { brand, disc, h, icon, led, themeToggle, toast } from "../lib/ui";
 
@@ -37,10 +38,9 @@ export function Landing(root: HTMLElement) {
       onsubmit: async (e: Event) => {
         e.preventDefault();
         const code = codeInput.value.trim().toUpperCase();
-        if (!isRoomCode(code) || !(await roomExists(code))) {
-          toast("No room with that code. Check the code on the TV.", "error");
-          return;
-        }
+        const exists = isRoomCode(code) ? await roomExists(code) : false;
+        if (exists === null) return toast("You're offline. Connect to the internet and try again.", "error");
+        if (!exists) return toast("No room with that code. Check the code on the TV.", "error");
         location.href = `/${code}`;
       },
     },
@@ -67,21 +67,45 @@ export function Landing(root: HTMLElement) {
     ["Does it cost anything?", "No. Awitloop is free and open source."],
   ];
 
+  // Install button: one tap on Chrome/Edge/Android, instructions on iPhone.
+  const installBtn = h("button", { class: "btn btn-ghost btn-sm install-btn", type: "button", hidden: true }, icon("phone", 14), h("span", null, "Install app"));
+  const paintInstall = () => (installBtn.hidden = !installMode());
+  installBtn.addEventListener("click", async () => {
+    if (installMode() === "ios") toast("Tap Share, then “Add to Home Screen”.");
+    else if (await promptInstall()) toast("Installed. Open Awitloop from your home screen.");
+    paintInstall();
+  });
+  onInstallChange(paintInstall);
+  paintInstall();
+
+  // Opening the installed app lands here: offer the room you were last in, if it still exists.
+  const resume = h("a", { class: "resume", hidden: true });
+  const last = lastRoom();
+  if (last) {
+    roomExists(last.code).then((ok) => {
+      if (!ok) return;
+      resume.setAttribute("href", roomPath(last));
+      resume.append(h("span", { class: "badge-dot" }), `Back to room ${last.code}`);
+      resume.hidden = false;
+    });
+  }
+
   const heroDisc = disc("disc-hero spinning", h("span", { class: "hero-label" }, h("span", { class: "hero-label-word" }, "awitloop"), led("SIDE A")));
 
   root.appendChild(
     h(
       "div",
       { class: "landing" },
-      h("header", { class: "topbar wrap" }, brand("lg"), h("nav", { class: "topnav" }, h("a", { href: "#fixed" }, "What's fixed"), h("a", { href: "#setup" }, "Setup"), h("a", { href: "#faq" }, "FAQ"), themeToggle())),
+      h("header", { class: "topbar wrap" }, brand("lg"), h("nav", { class: "topnav" }, h("a", { href: "#fixed" }, "What's fixed"), h("a", { href: "#setup" }, "Setup"), h("a", { href: "#faq" }, "FAQ"), installBtn, themeToggle())),
       h(
         "section",
         { class: "hero wrap" },
         h("div", { class: "hero-glow", "aria-hidden": "true" }),
-        h("p", { class: "badge" }, h("span", { class: "badge-dot" }), "Free, no app, works on smart TVs"),
+        h("p", { class: "badge" }, h("span", { class: "badge-dot" }), "Free, no sign-up, works on smart TVs"),
         h("h1", { class: "hero-title" }, "Karaoke night on any screen you own"),
         h("p", { class: "hero-sub" }, "Open Awitloop on the TV. Everyone adds songs from their phone, and every screen plays the same line at the same moment."),
         h("div", { class: "hero-cta" }, startBtn, joinForm),
+        resume,
         h("p", { class: "hero-tv" }, icon("tv", 16), h("span", null, "On a smart TV, open ", h("b", null, `${location.host}/tv`), " in its browser.")),
         h("div", { class: "hero-art", "aria-hidden": "true" }, heroDisc),
       ),

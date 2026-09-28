@@ -115,6 +115,14 @@ export function led(text: string, cls = "") {
   return h("span", { class: `led ${cls}` }, text);
 }
 
+/** Full-page message for "room not found" and "you're offline". */
+export function bootMessage(root: HTMLElement, text: string, action: { label: string; href?: string; onClick?: () => void }) {
+  const btn = action.href
+    ? h("a", { class: "btn btn-primary btn-lg", href: action.href }, action.label)
+    : h("button", { class: "btn btn-primary btn-lg", type: "button", onclick: action.onClick, autofocus: true }, action.label);
+  root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, text), btn));
+}
+
 /* ---------- toasts ---------- */
 
 let toastHost: HTMLElement | null = null;

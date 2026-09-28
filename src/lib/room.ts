@@ -221,7 +221,12 @@ export async function createRoom(): Promise<string> {
   return ((await res.json()) as { code: string }).code;
 }
 
-export async function roomExists(code: string): Promise<boolean> {
-  const res = await fetch(`/api/rooms/${code}/state`, { cache: "no-store" });
-  return res.ok;
+/** true / false, or null when we couldn't reach the server at all (offline). */
+export async function roomExists(code: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(`/api/rooms/${code}/state`, { cache: "no-store" });
+    return res.ok;
+  } catch {
+    return null;
+  }
 }

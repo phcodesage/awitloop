@@ -2,7 +2,8 @@ import type { RoomState } from "../../shared/protocol";
 import { positionAt } from "../../shared/protocol";
 import { SyncedPlayer } from "../lib/player";
 import { RoomClient, createRoom, roomExists } from "../lib/room";
-import { brand, clear, cleanTitle, disc, fmtTime, h, icon, joinUrl, led, qrSvg, toast } from "../lib/ui";
+import { rememberRoom } from "../lib/pwa";
+import { bootMessage, brand, clear, cleanTitle, disc, fmtTime, h, icon, joinUrl, led, qrSvg, toast } from "../lib/ui";
 import { fullscreen } from "./host";
 
 /** /tv with no code: make a room so a TV never needs on-screen typing. */
@@ -22,22 +23,26 @@ export async function Stage(root: HTMLElement, code: string) {
   document.title = `Awitloop · ${code}`;
   document.documentElement.classList.add("tv");
 
-  if (!(await roomExists(code))) {
+  const exists = await roomExists(code);
+  if (exists === null) return bootMessage(root, "The TV is offline. Check its internet connection.", { label: "Try again", onClick: () => location.reload() });
+  if (!exists) {
     root.appendChild(h("div", { class: "boot" }, brand("lg"), h("p", null, `Room ${code} has ended or doesn't exist.`), h("a", { class: "btn btn-primary btn-lg", href: "/tv" }, "Start a new room")));
     return;
   }
 
+  rememberRoom(code, "stage");
   const room = new RoomClient(code, "stage", "TV");
   room.onToast((t) => toast(t));
   const url = joinUrl(code);
 
   const videoHost = h("div", { class: "video" });
-  const startBtn = h("button", { class: "tv-start", type: "button", autofocus: true, "aria-label": "Start" }, disc("disc-start", h("span", { class: "tv-ok" }, "OK")));
+  const touch = !!window.matchMedia?.("(pointer: coarse)").matches;
+  const startBtn = h("button", { class: "tv-start", type: "button", autofocus: true, "aria-label": "Start" }, disc("disc-start", h("span", { class: "tv-ok" }, touch ? "TAP" : "OK")));
   const welcome = h(
     "div",
     { class: "tv-welcome" },
     startBtn,
-    h("div", { class: "tv-welcome-copy" }, brand("lg"), h("h1", null, "Press OK on your remote to start."), h("p", null, "The TV needs one button press before it's allowed to play sound.")),
+    h("div", { class: "tv-welcome-copy" }, brand("lg"), h("h1", null, touch ? "Tap the disc to start." : "Press OK on your remote to start."), h("p", null, touch ? "Your browser needs one tap before it's allowed to play sound." : "The TV needs one button press before it's allowed to play sound.")),
   );
 
   const idleQueue = h("div", { class: "tv-idle-queue" });
