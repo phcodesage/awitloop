@@ -7,12 +7,18 @@ export { Room };
 interface Env {
   ROOMS: DurableObjectNamespace<Room>;
   ASSETS: Fetcher;
+  /** Short public host (awitloop.pages.dev). Pages on the long workers.dev host redirect there. */
+  CANONICAL_HOST?: string;
 }
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname;
+
+    if (env.CANONICAL_HOST && url.hostname.endsWith(".workers.dev") && !path.startsWith("/api/")) {
+      return Response.redirect(`https://${env.CANONICAL_HOST}${path}${url.search}`, 301);
+    }
 
     try {
       if (path === "/api/rooms" && req.method === "POST") return createRoom(env);

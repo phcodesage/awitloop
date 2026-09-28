@@ -41,7 +41,7 @@ export function Landing(root: HTMLElement) {
           toast("No room with that code. Check the code on the TV.", "error");
           return;
         }
-        location.href = `/m/${code}`;
+        location.href = `/${code}`;
       },
     },
     h("label", { class: "join-label" }, "Have a code?"),
@@ -67,7 +67,7 @@ export function Landing(root: HTMLElement) {
     ["Does it cost anything?", "No. Awitloop is free and open source."],
   ];
 
-  const heroDisc = disc("disc-hero spinning", h("span", { class: "hero-label" }, led("SING", "led-xl"), h("span", null, "side A")));
+  const heroDisc = disc("disc-hero spinning", h("span", { class: "hero-label" }, h("span", { class: "hero-label-word" }, "awitloop"), led("SIDE A")));
 
   root.appendChild(
     h(
@@ -77,31 +77,29 @@ export function Landing(root: HTMLElement) {
       h(
         "section",
         { class: "hero wrap" },
-        h(
-          "div",
-          { class: "hero-copy" },
-          h("h1", { class: "hero-title" }, "Karaoke night on any screen you own."),
-          h("p", { class: "hero-sub" }, "Open Awitloop on the TV. Everyone adds songs from their phone, and every screen plays the same line at the same moment."),
-          h("div", { class: "hero-cta" }, startBtn, joinForm),
-          h("p", { class: "hero-tv" }, icon("tv", 16), h("span", null, "On a smart TV, open ", h("b", null, `${location.host}/tv`), " in its browser.")),
-        ),
+        h("div", { class: "hero-glow", "aria-hidden": "true" }),
+        h("p", { class: "badge" }, h("span", { class: "badge-dot" }), "Free, no app, works on smart TVs"),
+        h("h1", { class: "hero-title" }, "Karaoke night on any screen you own"),
+        h("p", { class: "hero-sub" }, "Open Awitloop on the TV. Everyone adds songs from their phone, and every screen plays the same line at the same moment."),
+        h("div", { class: "hero-cta" }, startBtn, joinForm),
+        h("p", { class: "hero-tv" }, icon("tv", 16), h("span", null, "On a smart TV, open ", h("b", null, `${location.host}/tv`), " in its browser.")),
         h("div", { class: "hero-art", "aria-hidden": "true" }, heroDisc),
       ),
       h(
         "section",
         { class: "wrap section", id: "fixed" },
-        h("h2", { class: "section-title" }, "You told us what broke."),
+        h("h2", { class: "section-title" }, "You told us what broke"),
         h("p", { class: "section-sub" }, "These are real comments about karaoke web apps. Here's what Awitloop does about each one."),
         h(
           "div",
           { class: "fixes" },
-          ...fixes.map(([said, did]) => h("div", { class: "fix" }, h("blockquote", { class: "fix-said" }, said), h("p", { class: "fix-did" }, did))),
+          ...fixes.map(([said, did]) => h("article", { class: "fix" }, h("blockquote", { class: "fix-said" }, said), h("p", { class: "fix-did" }, did))),
         ),
       ),
       h(
         "section",
         { class: "wrap section", id: "setup" },
-        h("h2", { class: "section-title" }, "Set up in three steps."),
+        h("h2", { class: "section-title" }, "Set up in three steps"),
         h(
           "ol",
           { class: "steps" },
@@ -115,6 +113,17 @@ export function Landing(root: HTMLElement) {
         { class: "wrap section", id: "faq" },
         h("h2", { class: "section-title" }, "Questions"),
         h("div", { class: "faq" }, ...faq.map(([q, a]) => h("details", null, h("summary", null, q, h("span", { class: "plus" }, icon("plus", 16))), h("p", null, a)))),
+      ),
+      h(
+        "section",
+        { class: "wrap cta-band" },
+        h("h2", null, "The mic is warm"),
+        h("p", null, "Start a room in one tap. No sign-up."),
+        (() => {
+          const b = h("button", { class: "btn btn-light btn-lg", type: "button" }, "Start a room");
+          b.addEventListener("click", () => start(b));
+          return b;
+        })(),
       ),
       h(
         "footer",

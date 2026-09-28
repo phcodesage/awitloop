@@ -4,7 +4,7 @@
 
 *awit* (Filipino: song) + *loop*. Put Awitloop on the big screen, everyone scans the QR code, and songs play back to back. Every screen stays on the same line of lyrics.
 
-**Live:** https://awitloop.rechceltoledo.workers.dev
+**Live:** https://awitloop.pages.dev
 
 | Route | What it is |
 | --- | --- |
@@ -12,7 +12,7 @@
 | `/r/CODE` | Host console for a laptop: player on the left, songbook on the right |
 | `/tv` | Open on a smart TV. Creates a room and shows a QR code, so you never type on the TV |
 | `/tv/CODE` | Full-screen TV stage view |
-| `/m/CODE` | Phone remote: search (including voice), queue, reorder, skip |
+| `/CODE` | Phone remote (the short link in the QR code): search (including voice), queue, reorder, skip |
 
 ## What's fixed compared to the usual web karaoke apps
 
@@ -41,15 +41,7 @@ These come straight from user feedback on similar apps:
 
 ## Design
 
-The look is a future videoke machine. The one loud element is the **laser disc**, with iridescent foil and grooves. It's the play button (it spins while a song plays) and the brand mark, and on idle screens it holds the join QR code on its center label. Everything else stays quiet: flat midnight surfaces, keycap-style hardware buttons, and a dot-matrix LED face ([Doto](https://fonts.google.com/specimen/Doto)) used only for machine readouts such as the room code, the clock, and counts. UI text is set in [Onest](https://fonts.google.com/specimen/Onest).
-
-| Token | Dark | Light |
-| --- | --- | --- |
-| night (background) | `#141331` | `#ECEAF6` |
-| deck (panels) | `#1C1A44` | `#FFFFFF` |
-| moon (text, primary buttons) | `#EEEBFF` | `#16143A` |
-| led (readouts, progress) | `#9DE7FF` | `#1C6591` |
-| hot (live states only) | `#FF5C7A` | `#D2335A` |
+The UI follows [Musico](https://musico.framer.website/): ink black `#0b0b0b`, ember orange `#dc6d28`, Inter Display with Fragment Mono for readouts, pill buttons, and Musico's orange gradient band. On top of that there's one signature element, a **warm-foil laser disc**. It's the play button (it spins while a song plays) and the brand mark, and on idle screens it holds the join QR code on its center label. Light mode uses Musico's `#f5f5f5` and white.
 
 The YouTube player is sized taller than its frame, so the video letterboxes inside it and YouTube's title bar and "More videos" strip fall in the cropped area. A transparent shield keeps hover from bringing them back.
 
@@ -73,8 +65,11 @@ npx wrangler dev       # worker + assets on http://localhost:8787
 Deploy:
 
 ```bash
-npm run deploy
+npm run deploy                                   # the Worker (API, rooms, assets)
+cd pages && npx wrangler pages deploy --branch main   # the awitloop.pages.dev front door
 ```
+
+`awitloop.pages.dev` is a tiny Pages project (`pages/dist/_worker.js`) that passes every request, including WebSocket upgrades, to the Worker over a service binding. Page loads on the long `*.workers.dev` address redirect to it (`CANONICAL_HOST` in `wrangler.jsonc`).
 
 Handy for debugging sync: open the browser console on any playing screen and run `__awitloop.drift()`. It returns the number of seconds this screen is ahead of (+) or behind (−) the room.
 

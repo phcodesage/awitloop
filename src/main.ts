@@ -16,6 +16,7 @@ const code = (rawCode || "").toUpperCase();
 if (section === "tv" && !rawCode) StageBoot(root);
 else if (section === "tv" && isRoomCode(code)) Stage(root, code);
 else if (section === "r" && isRoomCode(code)) Host(root, code);
-else if ((section === "m" || section === "j") && isRoomCode(code)) Remote(root, code);
-else if (section && isRoomCode(section.toUpperCase())) location.replace(`/m/${section.toUpperCase()}`);
+else if (section === "m" && isRoomCode(code)) Remote(root, code);
+// Short join links: awitloop.pages.dev/CN3UT
+else if (section && !rawCode && isRoomCode(section.toUpperCase())) Remote(root, section.toUpperCase());
 else Landing(root);

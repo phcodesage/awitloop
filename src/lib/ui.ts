@@ -214,5 +214,5 @@ export function isTyping(e: KeyboardEvent): boolean {
 }
 
 export function joinUrl(code: string) {
-  return `${location.origin}/m/${code}`;
+  return `${location.origin}/${code}`;
 }
