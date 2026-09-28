@@ -12,7 +12,7 @@ declare global {
 
 const YT_STATE = { UNSTARTED: -1, ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 };
 /** Beyond this, a screen is considered out of sync and hard-seeks. */
-const DRIFT_TOLERANCE = 0.25;
+const DRIFT_TOLERANCE = 0.15;
 /** Minimum gap between corrective seeks, so a slow TV never stutters in a loop. */
 const SEEK_COOLDOWN_MS = 4000;
 
@@ -107,6 +107,8 @@ export class SyncedPlayer {
     // Handy for debugging sync from the console: __awitloop.drift()
     (window as any).__awitloop = this;
     this.tickTimer = window.setInterval(() => this.tick(), 500);
+    // Coming back from the background: the OS may have paused or starved the video.
+    document.addEventListener("visibilitychange", this.onVisible);
   }
 
   /** Must be called from a click/tap/OK-press to allow sound. */
@@ -136,7 +138,14 @@ export class SyncedPlayer {
     return this.yt.getCurrentTime() - this.target(s);
   }
 
+  private onVisible = () => {
+    if (document.visibilityState !== "visible" || !this.ready) return;
+    this.lastSeekAt = 0;
+    window.setTimeout(() => this.sync(true), 600); // after the wake-up clock pings land
+  };
+
   destroy() {
+    document.removeEventListener("visibilitychange", this.onVisible);
     this.unsubscribe();
     clearInterval(this.tickTimer);
     clearTimeout(this.startWatch);

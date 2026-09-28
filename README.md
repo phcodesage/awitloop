@@ -20,7 +20,7 @@ These come straight from user feedback on similar apps:
 
 | Complaint | What Awitloop does |
 | --- | --- |
-| "Songs are out of sync across users" | The room keeps one server clock. Each screen estimates its offset from that clock (NTP-style, using the lowest-latency ping) and seeks whenever it drifts more than 250 ms. The seek lead is learned per device, so slow TVs land on time too. In testing, two screens stayed within **~2 ms** of each other. |
+| "Songs are out of sync across users" | The room keeps one server clock. Each screen estimates its offset from that clock (NTP-style, using the lowest-latency ping) and seeks whenever it drifts more than 150 ms. The seek lead is learned per device, so slow TVs land on time too. In testing, two screens stayed within **~2 ms** of each other. |
 | "Skip button is non-functional" | Skip is a room action carrying the id of the song the sender saw. If two people tap at once, only one song gets skipped. A Durable Object alarm also advances the queue if every screen is asleep. |
 | "Can't type the letter *u* in search" | Keyboard shortcuts ignore key presses in text fields, and the YouTube player's own shortcuts are disabled (`disablekb`). |
 | "Video won't play on LG" / "Doesn't work on Samsung TV" | There's a legacy build (Chromium 53+) for webOS/Tizen browsers. The stage page has a "Press OK to start" screen, because TVs block sound until a button is pressed. It also handles the remote's media keys. |

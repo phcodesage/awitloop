@@ -27,6 +27,9 @@ export class RoomClient {
   private bestRtt = Infinity;
   private samples: { rtt: number; offset: number; at: number }[] = [];
   private pingTimer = 0;
+  private watchdog = 0;
+  /** Last time anything arrived on the socket. A silent "open" socket is a dead one. */
+  private lastHeard = 0;
   private pollTimer = 0;
   private closed = false;
 
@@ -36,9 +39,20 @@ export class RoomClient {
     private name: string,
   ) {
     this.connect();
+    // Phones that sleep or switch apps often come back with a socket that still
+    // reports OPEN but is dead. On wake, re-check the clock and require an answer fast.
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible" && (!this.ws || this.ws.readyState > 1)) this.connect();
+      if (document.visibilityState !== "visible") return;
+      if (!this.ws || this.ws.readyState > 1) return this.connect();
+      const asked = Date.now();
+      this.burstPing();
+      window.setTimeout(() => {
+        if (this.lastHeard < asked) this.reconnectNow();
+      }, 3000);
     });
+    this.watchdog = window.setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN && Date.now() - this.lastHeard > 25000) this.reconnectNow();
+    }, 5000);
     window.addEventListener("online", () => this.connect());
   }
 
@@ -78,7 +92,27 @@ export class RoomClient {
     this.closed = true;
     clearInterval(this.pingTimer);
     clearInterval(this.pollTimer);
+    clearInterval(this.watchdog);
     this.ws?.close();
+  }
+
+  /** Drop a socket we no longer trust and dial again immediately. */
+  private reconnectNow() {
+    const old = this.ws;
+    this.ws = null;
+    clearInterval(this.pingTimer);
+    if (old) {
+      old.onclose = null;
+      old.onmessage = null;
+      try {
+        old.close();
+      } catch {
+        /* already gone */
+      }
+    }
+    this.setStatus("connecting");
+    this.retry = 0;
+    this.connect();
   }
 
   private setStatus(s: ConnStatus) {
@@ -98,15 +132,17 @@ export class RoomClient {
 
     ws.onopen = () => {
       this.retry = 0;
+      this.lastHeard = Date.now();
       this.setStatus("online");
       ws.send(JSON.stringify({ t: "hello", name: this.name, role: this.role } satisfies ClientMsg));
       for (const m of this.outbox.splice(0)) ws.send(JSON.stringify(m));
       this.burstPing();
       clearInterval(this.pingTimer);
-      this.pingTimer = window.setInterval(() => this.ping(), 15000);
+      this.pingTimer = window.setInterval(() => this.ping(), 10000);
     };
 
     ws.onmessage = (ev) => {
+      this.lastHeard = Date.now();
       let msg: ServerMsg;
       try {
         msg = JSON.parse(ev.data);

@@ -51,7 +51,7 @@ export function Landing(root: HTMLElement) {
 
   // Real comments from people who used a similar app, and what Awitloop does about each.
   const fixes: [string, string][] = [
-    ["Songs are out of sync across different users in the same room.", "Every screen follows one room clock and corrects itself when it drifts more than a quarter second. Two TVs in the same room stay within milliseconds."],
+    ["Songs are out of sync across different users in the same room.", "Every screen follows one room clock and corrects itself when it drifts more than 0.15 seconds. Two TVs in the same room stay within milliseconds."],
     ["The skip button is non-functional.", "Skip goes through the room, so it works from any phone. If two people press it together, only one song is skipped."],
     ["Cannot type the letter “u” in the search box.", "Shortcuts are off while you type, so search takes every letter."],
     ["Ayaw magplay ng video sa LG. Doesn't work on our Samsung TV.", "The TV view is built for older LG and Samsung browsers, and handles the remote's OK and play buttons. Uploads that block TV playback are left out of search."],
