@@ -57,10 +57,12 @@ export class RoomClient {
     this.send({ t: "hello", name, role: this.role });
   }
 
-  onState(fn: Listener) {
+  onState(fn: Listener): () => void {
     this.listeners.add(fn);
     if (this.state) fn(this.state);
-    return () => this.listeners.delete(fn);
+    return () => {
+      this.listeners.delete(fn);
+    };
   }
 
   onStatus(fn: (s: ConnStatus) => void) {

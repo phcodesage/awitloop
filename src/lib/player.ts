@@ -1,5 +1,6 @@
 import type { RoomState } from "../../shared/protocol";
 import type { RoomClient } from "./room";
+import { clear } from "./ui";
 
 /* Minimal typings for the YouTube IFrame API. */
 declare global {
@@ -52,6 +53,7 @@ export class SyncedPlayer {
   private reportedEnd: string | null = null;
   private reportedDuration: string | null = null;
   private tickTimer = 0;
+  private unsubscribe: () => void = () => {};
   private startWatch = 0;
   private lastSeekAt = 0;
   /**
@@ -74,6 +76,7 @@ export class SyncedPlayer {
     host.appendChild(mount);
     host.appendChild(shield);
     loadApi().then(() => {
+      if (!mount.isConnected) return;
       this.yt = new window.YT.Player(mount, {
         width: "100%",
         height: "100%",
@@ -100,7 +103,7 @@ export class SyncedPlayer {
         },
       });
     });
-    room.onState(() => this.sync());
+    this.unsubscribe = room.onState(() => this.sync());
     // Handy for debugging sync from the console: __awitloop.drift()
     (window as any).__awitloop = this;
     this.tickTimer = window.setInterval(() => this.tick(), 500);
@@ -134,8 +137,13 @@ export class SyncedPlayer {
   }
 
   destroy() {
+    this.unsubscribe();
     clearInterval(this.tickTimer);
+    clearTimeout(this.startWatch);
+    this.ready = false;
     this.yt?.destroy?.();
+    this.yt = null;
+    clear(this.host);
   }
 
   private target(s: RoomState): number {

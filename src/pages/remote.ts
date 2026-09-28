@@ -1,4 +1,6 @@
+import type { RoomState } from "../../shared/protocol";
 import { positionAt } from "../../shared/protocol";
+import { SyncedPlayer } from "../lib/player";
 import { RoomClient, roomExists } from "../lib/room";
 import { Songbook } from "../lib/songbook";
 import { brand, clear, cleanTitle, disc, fmtTime, getName, h, icon, led, setName, themeToggle, toast } from "../lib/ui";
@@ -43,10 +45,57 @@ export async function Remote(root: HTMLElement, code: string) {
     room.send({ t: "skip", currentId: cur.id });
     toast(`Skipped ${cleanTitle(cur.title)}`);
   });
+  /*
+   * Phones are remotes by default: the host screen or TV plays the sound. "Play here"
+   * opens a synced player on this phone, for singing along without a TV nearby.
+   */
+  const where = h("span", { class: "where-text" });
+  const hereBtn = h("button", { class: "btn btn-ghost btn-sm here-btn", type: "button" });
+  const phoneGate = h("button", { class: "gate", type: "button", hidden: true }, h("span", { class: "gate-ic" }, icon("volume", 24)), h("span", null, "Tap for sound"));
+  const phoneVideo = h("div", { class: "video" });
+  const phoneScreen = h("div", { class: "phone-screen", hidden: true }, phoneVideo, phoneGate);
+  let phonePlayer: SyncedPlayer | null = null;
+
+  const paintWhere = (s: RoomState | null) => {
+    const stage = s?.members.some((m) => m.role === "stage");
+    const host = s?.members.some((m) => m.role === "host");
+    if (phonePlayer) where.textContent = "Playing on this phone";
+    else if (stage) where.textContent = "Sound is playing on the TV";
+    else if (host) where.textContent = "Sound is playing on the host's screen";
+    else where.textContent = "No screen is playing sound right now";
+    clear(hereBtn);
+    hereBtn.appendChild(icon(phonePlayer ? "mute" : "volume", 14));
+    hereBtn.appendChild(h("span", null, phonePlayer ? "Stop playing here" : "Play here"));
+  };
+
+  hereBtn.addEventListener("click", () => {
+    if (phonePlayer) {
+      phonePlayer.destroy();
+      phonePlayer = null;
+      phoneScreen.hidden = true;
+      phoneGate.hidden = true;
+    } else {
+      phoneScreen.hidden = false;
+      phonePlayer = new SyncedPlayer(phoneVideo, room, {
+        muted: () => false,
+        onNeedsGesture: (needs) => (phoneGate.hidden = !needs),
+      });
+      phonePlayer.unlock();
+      const s = room.state;
+      if (s?.members.some((m) => m.role === "stage" || m.role === "host")) {
+        toast("Use headphones if you're in the same room as the TV, or you'll hear an echo.");
+      }
+    }
+    paintWhere(room.state);
+  });
+  phoneGate.addEventListener("click", () => phonePlayer?.unlock());
+
   const mini = h(
     "div",
     { class: "mini-player" },
     h("div", { class: "mini-progress" }, npFill),
+    phoneScreen,
+    h("div", { class: "where" }, icon("volume", 14), where, hereBtn),
     h("div", { class: "mini-row" }, npDisc, h("div", { class: "mini-text", onclick: () => songbook.setTab("queue") }, npTitle, npSub), npTime, playBtn, skipBtn),
   );
 
@@ -64,6 +113,7 @@ export async function Remote(root: HTMLElement, code: string) {
 
   let status = "";
   room.onState((s) => {
+    paintWhere(s);
     mini.classList.toggle("idle", !s.current);
     if (s.current) {
       npThumb.src = s.current.thumb;

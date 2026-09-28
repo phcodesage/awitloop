@@ -1591,6 +1591,42 @@ button.room-code:hover {
   box-shadow: var(--led-glow);
   transition: width 1s linear;
 }
+.where {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--haze);
+}
+.where .ic {
+  margin-right: 8px;
+  color: var(--hot);
+}
+.where-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.here-btn {
+  margin-left: 10px;
+  height: 30px;
+  flex: none;
+}
+.songbook.compact .here-btn span,
+.here-btn span {
+  display: inline;
+}
+.phone-screen {
+  position: relative;
+  height: 0;
+  padding-top: 56.25%;
+  margin: 2px 0 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+}
 .mini-row {
   display: flex;
   align-items: center;
